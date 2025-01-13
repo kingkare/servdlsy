@@ -23,6 +23,9 @@ browser = None
 # telegram消息
 message = ""
 
+# 用于统计登录成功的账号数
+successful_logins = 0
+
 async def login(username, password, panel):
     global browser
 
@@ -65,6 +68,7 @@ async def login(username, password, panel):
     finally:
         if page:
             await page.close()
+
 # 显式的浏览器关闭函数
 async def shutdown_browser():
     global browser
@@ -73,7 +77,7 @@ async def shutdown_browser():
         browser = None
 
 async def main():
-    global message
+    global message, successful_logins
 
     try:
         async with aiofiles.open('accounts.json', mode='r', encoding='utf-8') as f:
@@ -93,16 +97,17 @@ async def main():
 
         now_beijing = format_to_iso(datetime.utcnow() + timedelta(hours=8))
         if is_logged_in:
-            message += f"✅*{serviceName}*账号 *{username}* 于北京时间 {now_beijing}登录面板成功！\n\n"
-            print(f"{serviceName}账号 {username} 于北京时间 {now_beijing}登录面板成功！")
+            successful_logins += 1  # 计数成功登录的账号
+            message += f"✅*{serviceName}*账号 *{username}* 于北京时间 {now_beijing} 登录面板成功！\n\n"
+            print(f"{serviceName}账号 {username} 于北京时间 {now_beijing} 登录面板成功！")
         else:
-            message += f"❌*{serviceName}*账号 *{username}* 于北京时间 {now_beijing}登录失败\n\n❗请检查*{username}*账号和密码是否正确。\n\n"
+            message += f"❌*{serviceName}*账号 *{username}* 于北京时间 {now_beijing} 登录失败\n\n❗请检查*{username}*账号和密码是否正确。\n\n"
             print(f"{serviceName}账号 {username} 登录失败，请检查{serviceName}账号和密码是否正确。")
 
         delay = random.randint(1000, 8000)
         await delay_time(delay)
         
-    message += f"🔚脚本结束，如有异常点击下方按钮👇"
+    message += f"🔚脚本结束，成功登录账号数: {successful_logins}个。如有异常点击下方按钮👇"
     await send_telegram_message(message)
     print(f'所有{serviceName}账号登录完成！')
     # 退出时关闭浏览器
@@ -111,7 +116,7 @@ async def main():
 async def send_telegram_message(message):
     # 使用 Markdown 格式
     formatted_message = f"""
-*🎯 serv00&ct8自动化保号脚本运行报告*
+*🎯 serv00自动化保号脚本运行报告*
 
 🕰 *北京时间*: {format_to_iso(datetime.utcnow() + timedelta(hours=8))}
 
@@ -133,7 +138,7 @@ async def send_telegram_message(message):
                 [
                     {
                         'text': '问题反馈❓',
-                        'url': 'https://t.me/yxjsjl'  # 点击按钮后跳转到问题反馈的链接
+                        'url': 'https://t.me/kingkarems_bot'  # 点击按钮后跳转到问题反馈的链接
                     }
                 ]
             ]
